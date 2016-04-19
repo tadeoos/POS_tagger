@@ -3,11 +3,11 @@ from nltk.corpus import brown
 from nltk.util import flatten
 import il3TT as pd
 from nltk.probability import ConditionalFreqDist, FreqDist
-from nltk.probability import ConditionalProbDist, ELEProbDist, KneserNeyProbDist, LaplaceProbDist, HeldoutProbDist, CrossValidationProbDist
 from collections import Counter
 import math
 from reglin import fit
 from time import time
+from decimal import Decimal
 
 times = {'start':time()}
 print('Zaczynam')
@@ -24,7 +24,7 @@ def bound_korp(korp, n):
 s =  brown.tagged_sents(tagset='universal')
 # s =  brown.tagged_sents()
 korpusy = pd.podziel(s)
-
+ss = bound_korp(s, 3)
 
 k_rozw = bound_korp(korpusy[0], 3)
 k_test = korpusy[1]
@@ -116,10 +116,10 @@ def p_star(n, gram):
 	mniejsze_gramy = tagi_all[n-1][1]
 	if gram[:-1] not in mniejsze_gramy:
 		# print('gram not in mniejsze! w p_star!')
-		return 0
+		return Decimal.from_float(0)
 	dic = GT_est[n]
 	tags = tagi_all[n][1]
-	return dic[tags[gram]]/mniejsze_gramy[gram[:-1]]
+	return Decimal.from_float(dic[tags[gram]]/mniejsze_gramy[gram[:-1]])
 
 def beta(n, gram):
 	tagi = tagi_all[n]
@@ -144,7 +144,7 @@ def katz_backoff(n, gram):
 	if tags[gram] in dic:
 		# print('cos znalazlem nie cofam sie')
 		# print(gram, tags[gram])
-		return dic[tags[gram]]/mniejsze_gramy[gram[:-1]]
+		return Decimal.from_float(dic[tags[gram]]/mniejsze_gramy[gram[:-1]])
 	else:
 		# print('nie znalazlem nic, alfa: ', alfa( n, gram[:-1]))
 		return alfa( n, gram[:-1]) * katz_backoff( n-1, gram[1:])
@@ -160,7 +160,7 @@ for word in fl:
 		cnt +=1
 
 # oszukujemy i uczymy sie słownictwa na całym korpusie
-lex = cfdWords(s)
+lex = cfdWords(ss)
 cosa = {k : len(lex[k].keys()) for k in lex.keys()}
 
 times['po_cosach'] = time()
@@ -179,7 +179,9 @@ def prob_word(tag, word):
 	# return lex[tag].get(word, zero_prob(tag))/sum(lex[tag].values())
 	# if word.lower() not in fl2:
 	# 	return zero_prob(tag)
-	return lex[tag][word.lower()]/sum(lex[tag].values())
+	res = Decimal.from_float(lex[tag][word.lower()]/sum(lex[tag].values()))
+
+	return res
 
 sent = ['*', '*', 'I', 'was', 'happy', 'today', '.']
 def pi(k, u, v, s):
@@ -220,7 +222,8 @@ def viterbi(sen, bd):
 
 	for z in range(len(states)):
 		g = ('*','*',states[z])
-		res = bd.get(g, katz_backoff(3,g)) * prob_word(states[z], sen[2].lower())
+		a = bd.get(g, katz_backoff(3,g))
+		res =  a * prob_word(states[z], sen[2].lower())
 		# if res == 0:
 			# continue
 		path_prob[0].append((res, g[1:]))
@@ -240,13 +243,13 @@ def viterbi(sen, bd):
 			# 	continue 
 			p = []
 			for n in range(len(states)):
-				print(i, m, states[m], path_prob[i-1][n][1]+(states[m],), sen[2+i], prob_word(states[m], sen[2+i]))
-				print('slowo: {} tag m: {} tag n {}'.format(sen[2+i], states[m], states[n]))
+				# print(i, m, states[m], path_prob[i-1][n][1]+(states[m],), sen[2+i], prob_word(states[m], sen[2+i]))
+				# print('slowo: {} tag m: {} tag n {}'.format(sen[2+i], states[m], states[n]))
 				gram = path_prob[i-1][n][1][-2:]+(states[m],)
 				t1 = time()
 				pro = path_prob[i-1][n][0] * bd.get(gram, katz_backoff(3,gram)) * prob_word(states[m], sen[2+i].lower())
 				t2 = time()
-				print('pro. time: {} score= {}, (i, m , n ) = {} {} {}'.format(t2-t1, pro, i, m, n))
+				# print('pro. time: {} score= {}, (i, m , n ) = {} {} {}'.format(t2-t1, pro, i, m, n))
 				# if pro == 0:
 				# 	continue
 				p.append(pro)
@@ -254,10 +257,10 @@ def viterbi(sen, bd):
 			# if len(p)==0:
 			# 	continue
 			index = p.index(max(p))
-			print(p)
-			print(index)
+			# print(p)
+			# print(index)
 			gr = path_prob[i-1][index][1]+(states[m],)
-			print(gr)
+			# print(gr)
 			# print(gr)
 			path_prob[i].append((max(p), gr))
 		# print('AAAAA', sen[2+i], path_prob[i])	
@@ -314,9 +317,9 @@ rozw_tagi = [[t for (w,t) in s] for s in k_rozw]
 
 print(rozw_tagi[2923])
 assert len(rozw_tagi[2923])==147
-assert v == rozw_tagi[2923], 'NIE...'
+# assert v == rozw_tagi[2923], 'NIE...'
 t_v1 = time()
-# test = [viterbi(s, bd) for s in rozw_zdania[:100]]
+test = [viterbi(s, bd) for s in rozw_zdania]
 t_v2 = time()
 print('Corpus tagging time: ', t_v2-t_v1)
 # print('nowe:')
@@ -339,8 +342,8 @@ def evaluate_sents(a, b):
 			ile_ja += 1
 	return ile_ja/ile
 
-# print(evaluate(test, rozw_zdania[:100]))
-# print(evaluate_sents(test, rozw_zdania[:100]))
+print(evaluate(test, rozw_zdania))
+print(evaluate_sents(test, rozw_zdania))
 # print(rozw_tagi[:6])
 # print(test[:6])
 
