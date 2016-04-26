@@ -1,3 +1,4 @@
+#  thanks to http://code.activestate.com/recipes/578914-simple-linear-regression-with-pure-python/
 import math
 
 def fit(X, Y):

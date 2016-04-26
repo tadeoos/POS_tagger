@@ -8,8 +8,9 @@ import math
 from reglin import fit
 from time import time
 from decimal import Decimal
+from tag_map import map_dict
 
-times = {'start':time()}
+times = {'start' : time()}
 print('Zaczynam')
 def bound_korp(korp, n):
 	# assert('*' not in { t for k in k_tren for (word, t) in k })
@@ -21,14 +22,22 @@ def bound_korp(korp, n):
 
 
 
-s =  brown.tagged_sents(tagset='universal')
-# s =  brown.tagged_sents()
-korpusy = pd.podziel(s)
-ss = bound_korp(s, 3)
+s_prim = brown.tagged_sents()
 
-k_rozw = bound_korp(korpusy[0], 3)
+# for s in h.s_prim:
+# 	for (word,tag) in s:
+# 		if map_dict.get(tag, 'UNK')=='UNK':
+# 			print(tag)
+s = [[(word, map_dict.get(tag, 'UNK')) for (word, tag) in sent] for sent in s_prim]
+
+# s = brown.tagged_sents(tagset='universal')
+ss = bound_korp(s, 3)
+korpusy = pd.podziel(s)
+# ss = bound_korp(s, 3)
+
+k_rozw = korpusy[0]
 k_test = korpusy[1]
-k_tren = bound_korp(korpusy[2], 3)
+k_tren = korpusy[2]
 
 def korp_tags_only(korp):
 	k = flatten(korp)
@@ -87,6 +96,7 @@ def good_turing(korp, n):
 
 def tur_sd(r, c):
 	return math.sqrt( ((r+1)**2) * (c[r+1]/(c[r]**2)) * (1 + c[r+1]/c[r]))
+
 def nRtoZr(c):
 	prob_dict={}
 	# prob_dict[0] = c[1]/sum([a*b for (a,b) in c.items()])
@@ -110,9 +120,13 @@ def nRtoZr(c):
 for i in range(1, n+1):
 	GT_est.append(good_turing(k_tren, i))
 
-times['po_tablicah'] = time()
+times['po_tablicah'] = time() - times['start']
 
 def p_star(n, gram):
+	if n==1:
+		if tagi_all[1][1][gram] == 0:
+			print('P_star nie znajduje countu dla tego tagu...')
+		return Decimal.from_float(tagi_all[1][1][gram]/tagi_all[1][1].N())
 	mniejsze_gramy = tagi_all[n-1][1]
 	if gram[:-1] not in mniejsze_gramy:
 		# print('gram not in mniejsze! w p_star!')
@@ -128,15 +142,18 @@ def beta(n, gram):
 		# print('gram not in mniejsze! w becie!', gram)
 		return 1
 	# print('BETA', [p_star( n, gram+(a,)) for a in tagi[0][gram].keys()])
-	return 1 - sum([p_star( n, gram+(a,)) for a in tagi[0][gram].keys()])
-def alfa( n, gram):
+	return Decimal(1) - sum([p_star( n, gram + (a,) ) for a in tagi[0][gram].keys()])
+def alfa(n, gram):
 	tagi = tagi_all[n]
 	# print([(a, p_star( n-1, gram[1:]+(a,)), gram[1:]+(a,), n-1) for a in tagi[0][gram].keys()])
-	return beta(n,gram)/ (1 - sum([p_star( n-1, gram[1:]+(a,)) for a in tagi[0][gram].keys()]))
+	return beta(n,gram)/(Decimal(1) - sum([p_star(n-1, gram[1:]+(a,)) for a in tagi[0][gram].keys()]))
+
+# _ALFA_CNT = 0
 
 def katz_backoff(n, gram):
 	# print('jestem w katzu', n, gram)
 	if n == 1:
+		# print('Katz cofnal sie do 1!', gram)
 		return p_star( 1, gram)
 	mniejsze_gramy = tagi_all[n-1][1]
 	dic = GT_est[n]
@@ -144,12 +161,14 @@ def katz_backoff(n, gram):
 	if tags[gram] in dic:
 		# print('cos znalazlem nie cofam sie')
 		# print(gram, tags[gram])
-		return Decimal.from_float(dic[tags[gram]]/mniejsze_gramy[gram[:-1]])
+		return Decimal.from_float( dic[tags[gram]] / mniejsze_gramy[gram[:-1]] )
 	else:
 		# print('nie znalazlem nic, alfa: ', alfa( n, gram[:-1]))
+		# _ALFA_CNT += 1
+		# print('Cofam sie')
 		return alfa( n, gram[:-1]) * katz_backoff( n-1, gram[1:])
 
-# print(katz_backoff(3,('OD', 'VBG', 'JJ')))
+# print(katz_backoff( 3, ('OD', 'VBG', 'JJ') ) )
 tren_zdania = [[w.lower()  for (w,t) in s] for s in k_tren]
 rozw_zdania = [[w.lower()  for (w,t) in s] for s in k_rozw]
 fl = set(flatten(rozw_zdania))
@@ -160,10 +179,10 @@ for word in fl:
 		cnt +=1
 
 # oszukujemy i uczymy sie słownictwa na całym korpusie
-lex = cfdWords(ss)
+lex = cfdWords(s)
 cosa = {k : len(lex[k].keys()) for k in lex.keys()}
 
-times['po_cosach'] = time()
+times['po_cosach'] = time() - times['po_tablicah']
 print('jestem po cosa')
 
 
@@ -183,22 +202,6 @@ def prob_word(tag, word):
 
 	return res
 
-sent = ['*', '*', 'I', 'was', 'happy', 'today', '.']
-def pi(k, u, v, s):
-	# print(k, u, v)
-	if (k,u,v) == (1, '*', '*'):
-		print(k, u, v)
-		return 1
-	if k>2:
-		s = set_of_tags
-	else:
-		s = ['*']
-
-
-
-	# if k==2:
-		# return max([prob_word(v, sent[k].lower()) for v in set_of_tags])
-	return max([pi(k-1, w, u) * katz_backoff(3, (w,u,v)) * prob_word(v, sent[k].lower()) for w in s])
 
 states = sorted(list(set_of_tags))
 
@@ -224,9 +227,9 @@ def viterbi(sen, bd):
 		g = ('*','*',states[z])
 		a = bd.get(g, katz_backoff(3,g))
 		res =  a * prob_word(states[z], sen[2].lower())
-		# if res == 0:
-			# continue
-		path_prob[0].append((res, g[1:]))
+		if res == 0:
+			continue
+		path_prob[0].append( (res, g[1:]) )
 
 	# print(path_prob[0])
 	# print(max(path_prob[0]))
@@ -242,7 +245,7 @@ def viterbi(sen, bd):
 			# 	print('check!', states[m]) 
 			# 	continue 
 			p = []
-			for n in range(len(states)):
+			for n in range(len(path_prob[i-1])):
 				# print(i, m, states[m], path_prob[i-1][n][1]+(states[m],), sen[2+i], prob_word(states[m], sen[2+i]))
 				# print('slowo: {} tag m: {} tag n {}'.format(sen[2+i], states[m], states[n]))
 				gram = path_prob[i-1][n][1][-2:]+(states[m],)
@@ -250,12 +253,12 @@ def viterbi(sen, bd):
 				pro = path_prob[i-1][n][0] * bd.get(gram, katz_backoff(3,gram)) * prob_word(states[m], sen[2+i].lower())
 				t2 = time()
 				# print('pro. time: {} score= {}, (i, m , n ) = {} {} {}'.format(t2-t1, pro, i, m, n))
-				# if pro == 0:
-				# 	continue
+				if pro == 0:
+					continue
 				p.append(pro)
 
-			# if len(p)==0:
-			# 	continue
+			if len(p)==0:
+				continue
 			index = p.index(max(p))
 			# print(p)
 			# print(index)
@@ -286,7 +289,7 @@ def time_this(func, *args):
 	t2 = time()
 	return(t2-t1, res)
 
-s = ['*', '*', 'My', 'dad', 'cut', 'himself', '.', 'STOP']
+s3 = ['*', '*', 'My', 'dad', 'cut', 'himself', '.', 'STOP']
 s2 = ['*', '*', 'the', 'senior', 'policy', 'officer', 'may', 'be', 'moved', 'to', 'think', 'hard', 'about', 'a', 'problem', 'by', 'any', 'of', 'an', 'infinite', 'variety', 'of', 'stimuli', ':', 'an', 'idea', 'in', 'his', 'own', 'head', ',', 'the', 'suggestions', 'of', 'a', 'colleague', ',', 'a', 'question', 'from', 'the', 'secretary', 'or', 'the', 'president', ',', 'a', 'proposal', 'by', 'another', 'department', ',', 'a', 'communication', 'from', 'a', 'foreign', 'government', 'or', 'an', 'american', 'ambassador', 'abroad', ',', 'the', 'filing', 'of', 'an', 'item', 'for', 'the', 'agenda', 'of', 'the', 'united', 'nations', 'or', 'of', 'any', 'other', 'of', 'dozens', 'of', 'international', 'bodies', ',', 'a', 'news', 'item', 'read', 'at', 'the', 'breakfast', 'table', ',', 'a', 'question', 'to', 'the', 'president', 'or', 'the', 'secretary', 'at', 'a', 'news', 'conference', ',', 'a', 'speech', 'by', 'a', 'senator', 'or', 'congressman', ',', 'an', 'article', 'in', 'a', 'periodical', ',', 'a', 'resolution', 'from', 'a', 'national', 'organization', ',', 'a', 'request', 'for', 'assistance', 'from', 'some', 'private', 'american', 'interests', 'abroad', ',', 'et', 'cetera', ',', 'ad', 'infinitum', '.', 'stop']
 
 s1 = s2
@@ -305,21 +308,21 @@ print(v)
 # tren_zdania = [[w  for (w,t) in s] for s in k_tren]
 # rozw_zdania = [[w  for (w,t) in s] for s in k_rozw]
 
-fl = set(flatten(rozw_zdania))
-fl2 = set(flatten(lex.values()))
-cnt = 0
-for word in fl:
-	if word not in fl2:
-		cnt +=1
-print('nowych slow: ', cnt)
+# fl = set(flatten(rozw_zdania))
+# fl2 = set(flatten(lex.values()))
+# cnt = 0
+# for word in fl:
+# 	if word not in fl2:
+# 		cnt +=1
+# print('nowych slow: ', cnt)
 
-rozw_tagi = [[t for (w,t) in s] for s in k_rozw]
+rozw_tagi = [[t for (w,t) in a] for a in k_rozw]
 
 print(rozw_tagi[2923])
 assert len(rozw_tagi[2923])==147
 # assert v == rozw_tagi[2923], 'NIE...'
 t_v1 = time()
-test = [viterbi(s, bd) for s in rozw_zdania]
+test = [viterbi(s, bd) for s in rozw_zdania[:100]]
 t_v2 = time()
 print('Corpus tagging time: ', t_v2-t_v1)
 # print('nowe:')
@@ -342,8 +345,8 @@ def evaluate_sents(a, b):
 			ile_ja += 1
 	return ile_ja/ile
 
-print(evaluate(test, rozw_zdania))
-print(evaluate_sents(test, rozw_zdania))
+print(evaluate(test, rozw_tagi[:100]))
+print(evaluate_sents(test, rozw_tagi[:100]))
 # print(rozw_tagi[:6])
 # print(test[:6])
 
@@ -356,5 +359,6 @@ print(evaluate_sents(test, rozw_zdania))
 # h = []
 # for k in hmm2.lex.keys():
 # 	h.append((k, len(hmm2.lex[k].keys())))
+# print("ALFA_CNT: ", ALFA_CNT)
 times['koniec'] = time()
 	
