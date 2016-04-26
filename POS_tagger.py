@@ -61,12 +61,13 @@ class Tagger:
 	def good_turing(self, n):
 		tags = self.tagi_all[n]
 		c = Counter(tags[1].values())
-		wszystko = (len(self.korpus.get_zbior_tagow())+2) ** n - len(tags[1].keys())
+		# wszystko = (len(self.korpus.get_zbior_tagow())+2) ** n - len(tags[1].keys())
 		dict_zR = nRtoZr(c)
 		# print('dzr: {}'.format(dict_zR))
-		dict_zR[0] = wszystko
-		print(wszystko)
-		print('dzr: {}'.format(dict_zR))
+		# dict_zR[0] = wszystko
+		# print(wszystko)
+		del dict_zR[0]
+		# print('dzr: {}'.format(dict_zR))
 		d = sorted(dict_zR.items())
 		x = [math.log10(key) for (key, value) in d]
 		y = [math.log10(value) for (key, value) in d]
@@ -76,7 +77,16 @@ class Tagger:
 		nowy = {}
 		switch = 0
 		for key in sorted(c.keys()):
-			if ((abs(tur_est[key] - LGT[key]) > 1.65 * tur_sd(key, c)) and switch == 0 and tur_est[key] > 0) or (tur_est[key] < LGT[key]):
+
+
+			if tur_est[key] == 0:
+				if ((abs(key - LGT[key]) > 1.65 * tur_sd(key, c)) and switch == 0):
+					nowy[key] = key
+				else:
+					switch = 1
+					nowy[key] = LGT[key]
+
+			elif ((abs(tur_est[key] - LGT[key]) > 1.65 * tur_sd(key, c)) and switch == 0 and tur_est[key] > 0):
 				nowy[key] = tur_est[key]
 			else:
 				switch = 1
@@ -84,10 +94,10 @@ class Tagger:
 
 #
 		# print('nowy ', nowy)
-		# if 0 in nowy.values():
-			# print('nowy items:', nowy.items())
-			# print('tur_est:', tur_est.items())
-			# print('LGT:', LGT.items())
+		if 0 in nowy.values():
+			print('nowy items:', nowy.items())
+			print('tur_est:', tur_est.items())
+			print('LGT:', LGT.items())
 		return nowy
 
 	def p_star(self, n, gram):
@@ -111,11 +121,14 @@ class Tagger:
 		return Decimal.from_float(1) - sum([self.p_star( n, gram + (a,) ) for a in tagi[0][gram].keys()])
 	def alfa(self, n, gram):
 		tagi = self.tagi_all[n]
-		return self.beta(n,gram)/(Decimal.from_float(1) - sum([self.p_star(n-1, gram[1:]+(a,)) for a in tagi[0][gram].keys()]))
+		res = self.beta(n,gram)/(Decimal.from_float(1) - sum([self.p_star(n-1, gram[1:]+(a,)) for a in tagi[0][gram].keys()]))
+		if res <= 0:
+			return Decimal(1)
+		return res
 
 	def katz_backoff(self, n, gram):
 		if n == 1:
-			print('cofam do 1')
+			# print('cofam do 1')
 			return self.p_star( 1, gram)
 		mniejsze_gramy = self.tagi_all[n-1][1]
 		dic = self.GT_est[n]
@@ -130,11 +143,11 @@ class Tagger:
 			return self.alfa( n, gram[:-1]) * self.katz_backoff( n-1, gram[1:])
 
 	def prob_word(self, tag, word):
-		print('PROBWORD: tag {} word {} self.lex[tag][word.lower()] {} sum(self.lex[tag].values()) {}'.format(tag,word,self.lex[tag][word.lower()],sum(self.lex[tag].values())))
+		# print('PROBWORD: tag {} word {} self.lex[tag][word.lower()] {} sum(self.lex[tag].values()) {}'.format(tag,word,self.lex[tag][word.lower()],sum(self.lex[tag].values())))
 		return Decimal.from_float(self.lex[tag][word.lower()]/sum(self.lex[tag].values()))
 
 	def viterbi(self, sen):
-		print(sen)
+		# print(sen)
 		path_prob = [[] for b in range(len(sen)-2)]
 		for z in range(len(self.states)):
 			g = ('*','*',self.states[z])
@@ -150,23 +163,23 @@ class Tagger:
 				
 				p = []
 				for n in range(len(path_prob[i-1])):
-					print('slowo: {} tag n: {} tag m {}'.format(sen[2+i], self.states[n], self.states[m]))
+					# print('slowo: {} tag n: {} tag m {}'.format(sen[2+i], self.states[n], self.states[m]))
 					gram = path_prob[i-1][n][1][-2:]+(self.states[m],)
-					print('gram: {} prob dotychczasowe dla n: {} backoff: {} prob slowa: {}'.format(gram, path_prob[i-1][n][0] , self.backoff_dict.get(gram, self.katz_backoff(3,gram)) , self.prob_word(self.states[m], sen[2+i].lower()) ))
+					# print('gram: {} prob dotychczasowe dla n: {} backoff: {} prob slowa: {}'.format(gram, path_prob[i-1][n][0] , self.backoff_dict.get(gram, self.katz_backoff(3,gram)) , self.prob_word(self.states[m], sen[2+i].lower()) ))
 					pro = path_prob[i-1][n][0] * self.backoff_dict.get(gram, self.katz_backoff(3,gram)) * self.prob_word(self.states[m], sen[2+i].lower())
-					print('Pro: {}, n: {}'.format(pro, n))
+					# print('Pro: {}, n: {}'.format(pro, n))
 					if pro > 0:
 						p.append(pro)
 					else:
 						continue
 					
 
-				print('p: ', p)
+				# print('p: ', p)
 				if len(p)==0:
 					continue
 				index = p.index(max(p))
 				gr = path_prob[i-1][index][1]+(self.states[m],)
-				print('dodaje p! ', p)
+				# print('dodaje p! ', p)
 				path_prob[i].append((max(p), gr))
 
 		try:
