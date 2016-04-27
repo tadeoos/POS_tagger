@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2016.1.6)  26 APR 2016 21:38
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2016.1.6)  27 APR 2016 03:46
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -8,8 +8,8 @@ LaTeX2e <2015/01/01>
 Babel <3.9l> and hyphenation patterns for 79 languages loaded.
 (/usr/local/texlive/2015/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2014/09/29 v1.4h Standard LaTeX document class
-(/usr/local/texlive/2015/texmf-dist/tex/latex/base/size12.clo
-File: size12.clo 2014/09/29 v1.4h Standard LaTeX file (size option)
+(/usr/local/texlive/2015/texmf-dist/tex/latex/base/size11.clo
+File: size11.clo 2014/09/29 v1.4h Standard LaTeX file (size option)
 )
 \c@part=\count79
 \c@section=\count80
@@ -336,34 +336,44 @@ LaTeX Font Info:    Try loading font information for OMX+plex on input line 12.
 File: omxplex.fd 2008/02/24 v1.2.1 Font defs for fonts PL (MW)
 )
 LaTeX Font Info:    External font `plex10' loaded for size
-(Font)              <14.4> on input line 12.
+(Font)              <12> on input line 12.
 LaTeX Font Info:    External font `plex10' loaded for size
-(Font)              <10> on input line 12.
+(Font)              <8> on input line 12.
 LaTeX Font Info:    External font `plex10' loaded for size
-(Font)              <7> on input line 12.
-LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 14.
+(Font)              <6> on input line 12.
+LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <14.4> not available
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 13.
+LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <10.95> not available
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 15.
+
+Overfull \hbox (6.39388pt too wide) in paragraph at lines 19--20
+ [] \T1/ptm/m/n/10.95 Gªów-nym skªad-ni-kiem bil-bio-teki jest plik POS_tagger.
+py. Roz-wi¡-za-nie za-mkni¦te
+ []
+
 [1
 
-{/usr/local/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] (/Users
-/Tadeo/Desktop/NLTK/proj/TT_raport.aux) ) 
+{/usr/local/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
+LaTeX Font Info:    External font `plex10' loaded for size
+(Font)              <10.95> on input line 35.
+[2] (/Users/Tadeo/Desktop/NLTK/proj/TT_raport.aux) ) 
 Here is how much of TeX's memory you used:
- 1383 strings out of 493089
- 15897 string characters out of 6134843
- 69150 words of memory out of 5000000
- 4876 multiletter control sequences out of 15000+600000
- 19863 words of font info for 35 fonts, out of 8000000 for 9000
+ 1396 strings out of 493089
+ 16072 string characters out of 6134843
+ 74149 words of memory out of 5000000
+ 4887 multiletter control sequences out of 15000+600000
+ 23865 words of font info for 39 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 23i,6n,24p,200b,206s stack positions out of 5000i,500n,10000p,200000b,80000s
-{/usr/local/texlive/2015/texmf-dist/fo
-nts/enc/dvips/base/8r.enc}</usr/local/texlive/2015/texmf-dist/fonts/type1/urw/t
-imes/utmb8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/utmr8
-a.pfb>
-Output written on /Users/Tadeo/Desktop/NLTK/proj/TT_raport.pdf (1 page, 19559 b
-ytes).
+ 23i,8n,24p,1156b,214s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/local/texlive/2015/te
+xmf-dist/fonts/enc/dvips/base/8r.enc}</usr/local/texlive/2015/texmf-dist/fonts/
+type1/urw/times/utmb8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/
+times/utmr8a.pfb>
+Output written on /Users/Tadeo/Desktop/NLTK/proj/TT_raport.pdf (2 pages, 34255 
+bytes).
 PDF statistics:
- 17 PDF objects out of 1000 (max. 8388607)
- 11 compressed objects within 1 object stream
+ 20 PDF objects out of 1000 (max. 8388607)
+ 13 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 

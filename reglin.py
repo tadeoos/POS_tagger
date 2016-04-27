@@ -31,8 +31,8 @@ def fit(X, Y):
     r = pearson_r(X, Y)
 
     b = r * (std(Y, m_Y) / std(X, m_X))
-    if b > -1:
-    	print('DATA Problem: b > -1 !!! b = ',b)
+    # if b > -1:
+    	# print('DATA Problem: b > -1 !!! b = ',b)
     A = m_Y - b * m_X
 
     def line(x):
