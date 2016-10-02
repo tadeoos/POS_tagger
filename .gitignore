@@ -93,4 +93,4 @@ ENV/
 #LateX stuff
 *.aux
 *.fls
-*.fdb.+
+*.fdb_.*
