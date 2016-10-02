@@ -94,3 +94,6 @@ ENV/
 *.aux
 *.fls
 *.fdb_latexmk
+*.tex
+*.zip
+*.gz
