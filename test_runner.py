@@ -62,9 +62,9 @@ uni = nltk.corpus.brown.tagged_sents(tagset = "universal")
 
 
 
-test1(uni, n = 3)
+test1(uni, n = 3, zakres=300)
 
-test1(korp, 3, 100)
+# test1(korp, 3, 100)
 
 # test1(full, 3)
 
